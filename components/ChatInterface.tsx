@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  GENERIC_ERROR,
   MIN_INTAKE_CHARS,
   MIN_INTAKE_TURNS,
-  OFFLINE_ERROR,
   OPENING_MESSAGE,
   SIJUI_REFUSAL,
 } from '@/lib/constants';
@@ -23,6 +21,26 @@ interface Props {
   onFallback: (rawText: string) => void;
 }
 
+interface NoticeAction {
+  label: string;
+  primary?: boolean;
+  run: () => void;
+}
+
+/**
+ * A failure notice inside the conversation.
+ *
+ * Deliberately not a chat bubble: an error is the application speaking, not
+ * the assistant, and it must not read as something the model said. Every
+ * notice carries at least one action, because a failure the patient cannot
+ * act on is just a dead end.
+ */
+interface Notice {
+  title: string;
+  body: string;
+  actions: NoticeAction[];
+}
+
 export default function ChatInterface({
   messages,
   setMessages,
@@ -33,13 +51,14 @@ export default function ChatInterface({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [inputError, setInputError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [ready, setReady] = useState(false);
   const logEnd = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logEnd.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, notice]);
 
   const busy = isLoading || isGenerating;
 
@@ -55,10 +74,62 @@ export default function ChatInterface({
     patientMessages.length >= MIN_INTAKE_TURNS && patientChars >= MIN_INTAKE_CHARS;
   const canGenerate = !busy && hasMinimum;
 
+  const rawPatientText = () =>
+    patientMessages.map((m) => m.content).join('\n\n');
+
+  /** Ask for the next question. Separated so a notice can retry it. */
+  async function requestQuestion(history: ChatMessage[]) {
+    setNotice(null);
+    setIsLoading(true);
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        setNotice({
+          title: 'You appear to be offline',
+          body:
+            'The emergency safety check is still running on this device, so it is safe to keep typing. Reconnect and try again, or speak to the nurse at the desk directly.',
+          actions: [
+            { label: 'Try again', primary: true, run: () => void requestQuestion(history) },
+          ],
+        });
+        return;
+      }
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
+      });
+      if (!res.ok) throw new Error('chat failed');
+
+      const data = await res.json();
+
+      if (data.type === 'boundary') {
+        setMessages([...history, { role: 'assistant', content: SIJUI_REFUSAL }]);
+        return;
+      }
+      if (typeof data.question !== 'string') throw new Error('malformed');
+
+      setMessages([...history, { role: 'assistant', content: data.question }]);
+      if (data.enough_information) setReady(true);
+    } catch {
+      setNotice({
+        title: 'I could not reach the assistant',
+        body:
+          'Nothing you typed has been lost — it is all still on this screen. You can try again, or simply keep describing what you feel and prepare your summary when you are ready.',
+        actions: [
+          { label: 'Try again', primary: true, run: () => void requestQuestion(history) },
+        ],
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function send() {
     const trimmed = input.trim();
     if (!trimmed) {
-      setError('Please describe what you’re feeling.');
+      setInputError('Please describe what you’re feeling.');
       return;
     }
 
@@ -71,51 +142,22 @@ export default function ChatInterface({
 
     const next: ChatMessage[] = [...messages, { role: 'user', content: trimmed }];
     setInput('');
-    setError(null);
+    setInputError(null);
+    setNotice(null);
 
-    // Client-side sijui pre-filter: answer instantly, spend no tokens, and
-    // work with the network down.
+    // Client-side sijui pre-filter: answers instantly, spends no tokens, and
+    // works with the network down.
     if (isDiagnosticRequest(trimmed)) {
       setMessages([...next, { role: 'assistant', content: SIJUI_REFUSAL }]);
       return;
     }
 
     setMessages(next);
-    setIsLoading(true);
-
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        setError(OFFLINE_ERROR);
-        return;
-      }
-
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ messages: next }),
-      });
-      if (!res.ok) throw new Error('chat failed');
-
-      const data = await res.json();
-
-      if (data.type === 'boundary') {
-        setMessages([...next, { role: 'assistant', content: SIJUI_REFUSAL }]);
-        return;
-      }
-
-      if (typeof data.question !== 'string') throw new Error('malformed');
-
-      setMessages([...next, { role: 'assistant', content: data.question }]);
-      if (data.enough_information) setReady(true);
-    } catch {
-      setError(GENERIC_ERROR);
-    } finally {
-      setIsLoading(false);
-    }
+    await requestQuestion(next);
   }
 
   async function generate() {
-    setError(null);
+    setNotice(null);
     setIsGenerating(true);
 
     try {
@@ -139,14 +181,17 @@ export default function ChatInterface({
 
       onBrief(data);
     } catch {
-      // Degrade to unformatted, never to nothing. The nurse gets the
-      // patient's own words even when the model is unreachable.
-      onFallback(
-        messages
-          .filter((m) => m.role === 'user')
-          .map((m) => m.content)
-          .join('\n\n')
-      );
+      // Degrade to unformatted, never to nothing — but let the patient choose
+      // when to do it, rather than ending their session on their behalf.
+      setNotice({
+        title: 'I could not prepare your structured summary',
+        body:
+          'The service did not respond. You can try again, or take your own words to the nurse now — she will still receive everything you typed, just without the standard terms beside it.',
+        actions: [
+          { label: 'Try again', primary: true, run: () => void generate() },
+          { label: 'Show my words to the nurse', run: () => onFallback(rawPatientText()) },
+        ],
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -170,6 +215,26 @@ export default function ChatInterface({
 
         {isLoading && <div className="typing">Typing…</div>}
         {isGenerating && <div className="typing">Preparing your summary…</div>}
+
+        {notice && (
+          <div className="notice" role="status">
+            <p className="notice-title">{notice.title}</p>
+            <p className="notice-body">{notice.body}</p>
+            <div className="notice-actions">
+              {notice.actions.map((action) => (
+                <button
+                  key={action.label}
+                  className={action.primary ? 'btn' : 'btn btn-secondary'}
+                  onClick={action.run}
+                  disabled={busy}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div ref={logEnd} />
       </div>
 
@@ -184,7 +249,7 @@ export default function ChatInterface({
             )}
             <button
               className={ready ? 'btn' : 'btn btn-secondary'}
-              onClick={generate}
+              onClick={() => void generate()}
               disabled={busy}
               style={{ marginBottom: 10 }}
             >
@@ -213,7 +278,7 @@ export default function ChatInterface({
           </button>
         </div>
 
-        {error && <p className="inline-error">{error}</p>}
+        {inputError && <p className="inline-error">{inputError}</p>}
       </div>
     </div>
   );

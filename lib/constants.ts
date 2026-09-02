@@ -31,14 +31,9 @@ export const SIJUI_REFUSAL =
  */
 export const CRISIS_HELPLINE: { label: string; number: string } | null = null;
 
-/** Shown for every failure mode. The patient never sees a technical detail. */
-export const GENERIC_ERROR =
-  'We’re unable to process this right now. Please describe your symptoms ' +
-  'directly to a healthcare professional.';
-
-export const OFFLINE_ERROR =
-  'No internet connection. The safety check is still active. Please speak ' +
-  'directly to the nurse.';
+// Failure copy lives with the notices in ChatInterface, not here: each one is
+// paired with the actions that remedy it, and a message without an action is
+// the dead end this replaced. The patient still never sees a technical detail.
 
 export const OPENING_MESSAGE =
   'Karibu. What brought you here today? Describe what you are feeling, in your ' +

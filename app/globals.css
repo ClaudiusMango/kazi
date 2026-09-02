@@ -427,3 +427,43 @@ h2 {
   color: var(--text-secondary);
   margin: 0 0 10px;
 }
+
+/* ---------------------------------------------------- in-conversation notice */
+/* Not a chat bubble. A failure is the application speaking, not the assistant,
+   and it must not read as something the model said. */
+.notice {
+  align-self: stretch;
+  background: #fdf6e7;
+  border: 1px solid #e8d5a8;
+  border-left: 4px solid #c98a1e;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.notice-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #7a5510;
+}
+
+.notice-body {
+  margin: 0 0 14px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #5c4a2e;
+}
+
+.notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.notice-actions .btn {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 150px;
+  font-size: 16px;
+  padding: 11px 16px;
+}
