@@ -10,8 +10,30 @@ import {
 import { checkBriefForDangerSigns, checkDangerSigns } from '@/lib/interceptor';
 import { isDiagnosticRequest } from '@/lib/sijui-filter';
 import type { ChatMessage, DangerCategory, NurseBrief } from '@/lib/types';
+import { useSpeechInput } from '@/lib/use-speech';
 import { isNurseBrief } from '@/lib/validate-brief';
 import MessageBubble from './ui/MessageBubble';
+
+function MicIcon({ live }: { live: boolean }) {
+  if (live) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+      <path
+        d="M5 11a7 7 0 0 0 14 0M12 18v3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 interface Props {
   messages: ChatMessage[];
@@ -55,6 +77,14 @@ export default function ChatInterface({
   const [notice, setNotice] = useState<Notice | null>(null);
   const [ready, setReady] = useState(false);
   const logEnd = useRef<HTMLDivElement>(null);
+
+  // Voice is progressive enhancement. The transcript lands in the composer for
+  // the patient to read and correct; sending stays a separate deliberate tap,
+  // so an uncorrected transcript can never reach the model and the interceptor
+  // still runs on it exactly as it does for typed text.
+  const speech = useSpeechInput((text) =>
+    setInput((prev) => (prev ? `${prev} ${text}` : text))
+  );
 
   useEffect(() => {
     logEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -300,7 +330,25 @@ export default function ChatInterface({
           </>
         )}
 
+        {speech.listening && (
+          <p className="listening-hint">
+            Listening… your words appear below for you to check before sending.
+          </p>
+        )}
+
         <div className="composer-row">
+          {speech.supported && (
+            <button
+              type="button"
+              className={speech.listening ? 'mic mic-live' : 'mic'}
+              onClick={() => (speech.listening ? speech.stop() : speech.start())}
+              disabled={busy}
+              aria-pressed={speech.listening}
+              aria-label={speech.listening ? 'Stop recording' : 'Speak instead of typing'}
+            >
+              <MicIcon live={speech.listening} />
+            </button>
+          )}
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -321,6 +369,7 @@ export default function ChatInterface({
         </div>
 
         {inputError && <p className="inline-error">{inputError}</p>}
+        {speech.error && <p className="inline-error">{speech.error}</p>}
       </div>
     </div>
   );

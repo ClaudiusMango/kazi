@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { HANDOFF_ORIGIN } from '@/lib/constants';
 import { encodeBrief } from '@/lib/qr-payload';
 import type { NurseBrief } from '@/lib/types';
 
@@ -18,7 +19,9 @@ export default function QrHandoff({ brief }: { brief: NurseBrief }) {
     const encoded = encodeBrief(brief);
     setReduced(encoded.reduced);
     setTooLarge(encoded.tooLarge);
-    setUrl(`${window.location.origin}/nurse#${encoded.payload}`);
+    // A QR encoding "localhost" would resolve to the scanning phone itself.
+    const origin = HANDOFF_ORIGIN ?? window.location.origin;
+    setUrl(`${origin}/nurse#${encoded.payload}`);
   }, [brief]);
 
   if (!url || tooLarge) {

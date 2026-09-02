@@ -67,6 +67,20 @@ export const OPENING_MESSAGE =
 export const MIN_INTAKE_TURNS = 2;
 export const MIN_INTAKE_CHARS = 60;
 
+/**
+ * Origin the QR handoff link points at.
+ *
+ * Needed when the patient's device is on http://localhost — a QR encoding
+ * "localhost" resolves to the *scanning* phone, not to this machine. Set it to
+ * the LAN address for a local demo. Leave unset in a real deployment, where
+ * window.location.origin is already correct.
+ *
+ * NEXT_PUBLIC_ is inlined into the client bundle by design: it is a URL, not
+ * a secret.
+ */
+export const HANDOFF_ORIGIN =
+  process.env.NEXT_PUBLIC_HANDOFF_ORIGIN?.trim() || null;
+
 /** Shared-tablet inactivity handling. */
 export const INACTIVITY_WARN_MS = 90_000;
 export const INACTIVITY_PURGE_MS = 120_000;
