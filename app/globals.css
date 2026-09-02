@@ -624,3 +624,35 @@ h2 {
     text-align: center;
   }
 }
+
+/* ------------------------------------------------------- facility directory */
+.facility-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.facility-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.facility-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.facility-name {
+  font-weight: 600;
+}
+
+.facility-meta {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
