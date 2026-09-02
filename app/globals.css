@@ -11,6 +11,12 @@
   --text-secondary: #6b6b6b;
   --text-muted: #9a9a9a;
   --border: #e5e3de;
+
+  /* The nurse view runs a little wider than the patient view: it is a
+     two-column sheet read at arm's length, not a phone conversation. */
+  --shell-width: 620px;
+  --handoff-width: 760px;
+
   color-scheme: light;
 }
 
@@ -35,7 +41,7 @@ body {
 }
 
 .shell {
-  max-width: 620px;
+  max-width: var(--shell-width);
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
@@ -371,8 +377,14 @@ h2 {
 
 /* ------------------------------------------------------------ nurse handoff */
 .handoff {
+  max-width: var(--handoff-width);
+  margin: 0 auto;
   background: var(--card);
   min-height: 100vh;
+  /* Reads as a sheet on the warm background rather than bleeding to the
+     window edges on a laptop. */
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
 }
 
 .handoff-bar {
@@ -499,4 +511,33 @@ h2 {
   margin: 0 0 8px;
   font-size: 15px;
   color: var(--accent);
+}
+
+/* --------------------------------------------------------------- narrow screens */
+/* Two 160px columns on a phone is not "readable at arm's length". Stack them,
+   keeping the verbatim visibly subordinate to the term it came from. */
+@media (max-width: 460px) {
+  .brief-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .brief-verbatim {
+    padding-left: 12px;
+    border-left: 2px solid var(--border);
+  }
+
+  .handoff {
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* The alert screens keep their full-bleed background — that is the point of
+   them — but their content is constrained like every other screen, so the copy
+   does not stretch across a laptop display. */
+.alert > * {
+  width: 100%;
+  max-width: var(--handoff-width);
+  margin-inline: auto;
 }
