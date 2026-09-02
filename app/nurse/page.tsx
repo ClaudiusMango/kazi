@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import BriefRenderer from '@/components/BriefRenderer';
+import PrintableBrief from '@/components/PrintableBrief';
 import { decodeBrief } from '@/lib/qr-payload';
 import type { NurseBrief } from '@/lib/types';
 
@@ -62,7 +63,10 @@ export default function NurseViewer() {
   }
 
   return (
-    <div className="handoff">
+    <>
+      <PrintableBrief brief={state.brief} fallbackText={null} generatedAt="from scanned code" />
+
+      <div className="handoff screen-only">
       <div className="handoff-bar">
         <span>KAZI INTAKE BRIEF</span>
         <span className="badge">AI-assisted</span>
@@ -83,13 +87,14 @@ export default function NurseViewer() {
         </p>
 
         <button
-          className="btn btn-secondary no-print"
+          className="btn btn-secondary"
           onClick={() => window.print()}
           style={{ marginTop: 16 }}
         >
           Save as PDF
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

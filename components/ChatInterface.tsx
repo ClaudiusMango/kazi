@@ -88,6 +88,36 @@ export default function ChatInterface({
     setInput((prev) => (prev ? `${prev} ${text}` : text))
   );
 
+  // Hold to record, or tap once to keep recording and tap again to stop. A
+  // quick tap has to mean something deliberate: on its own it would start and
+  // immediately end, which reads as a microphone that does nothing.
+  const [micLocked, setMicLocked] = useState(false);
+  const pressStartedAt = useRef(0);
+  const TAP_TO_LOCK_MS = 400;
+
+  useEffect(() => {
+    if (!speech.listening) setMicLocked(false);
+  }, [speech.listening]);
+
+  function micPressStart() {
+    if (micLocked) {
+      setMicLocked(false);
+      speech.stop();
+      return;
+    }
+    pressStartedAt.current = Date.now();
+    speech.start();
+  }
+
+  function micPressEnd() {
+    if (micLocked) return;
+    if (Date.now() - pressStartedAt.current < TAP_TO_LOCK_MS) {
+      setMicLocked(true);
+      return;
+    }
+    speech.stop();
+  }
+
   useEffect(() => {
     logEnd.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading, notice]);
@@ -351,7 +381,9 @@ export default function ChatInterface({
           <p className="listening-hint">
             {speech.interim
               ? `“${speech.interim}”`
-              : 'Listening… your words appear below for you to check before sending.'}
+              : micLocked
+                ? 'Recording — tap the microphone again to stop.'
+                : 'Listening… your words appear below for you to check before sending.'}
           </p>
         )}
 
@@ -365,28 +397,31 @@ export default function ChatInterface({
               // leaving the microphone open.
               onPointerDown={(e) => {
                 e.currentTarget.setPointerCapture(e.pointerId);
-                speech.start();
+                micPressStart();
               }}
-              onPointerUp={() => speech.stop()}
+              onPointerUp={micPressEnd}
               onPointerCancel={() => speech.stop()}
               // Hold-to-speak is a pointer gesture, so give the keyboard the
               // same thing rather than leaving it with no way in.
               onKeyDown={(e) => {
                 if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
                   e.preventDefault();
-                  speech.start();
+                  micPressStart();
                 }
               }}
               onKeyUp={(e) => {
                 if (e.key === ' ' || e.key === 'Enter') {
                   e.preventDefault();
-                  speech.stop();
+                  micPressEnd();
                 }
               }}
               onContextMenu={(e) => e.preventDefault()}
               disabled={busy}
-              aria-label="Hold to speak"
-              title="Hold to speak"
+              aria-pressed={speech.listening}
+              aria-label={
+                speech.listening ? 'Stop recording' : 'Hold to speak, or tap to start'
+              }
+              title="Hold to speak, or tap once to start and again to stop"
             >
               <MicIcon live={speech.listening} />
             </button>
@@ -411,7 +446,9 @@ export default function ChatInterface({
         </div>
 
         {speech.supported && !speech.listening && !speech.error && (
-          <p className="mic-hint">Hold the microphone to speak</p>
+          <p className="mic-hint">
+            Hold the microphone to speak, or tap once to start and again to stop
+          </p>
         )}
         {inputError && <p className="inline-error">{inputError}</p>}
         {speech.error && <p className="inline-error">{speech.error}</p>}

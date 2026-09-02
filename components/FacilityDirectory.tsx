@@ -1,6 +1,13 @@
 'use client';
 
-import { FACILITIES, mapSearchUrl, type Facility } from '@/lib/facilities';
+import {
+  CLINIC_LOCATION,
+  FACILITIES,
+  distanceFromClinic,
+  formatKm,
+  mapSearchUrl,
+  type Facility,
+} from '@/lib/facilities';
 
 // Static, identical every time, unrelated to anything the patient told us.
 // Read by the nurse, who is the one who decides referrals.
@@ -22,8 +29,10 @@ function SchematicMap({ facilities }: { facilities: Facility[] }) {
   const H = 190;
   const PAD = 34;
 
-  const lats = placed.map((f) => f.lat);
-  const lngs = placed.map((f) => f.lng);
+  // The clinic is on the map too — a list of hospitals with no "you are here"
+  // tells the nurse nothing about which direction anything is in.
+  const lats = [...placed.map((f) => f.lat), CLINIC_LOCATION.lat];
+  const lngs = [...placed.map((f) => f.lng), CLINIC_LOCATION.lng];
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
@@ -44,6 +53,27 @@ function SchematicMap({ facilities }: { facilities: Facility[] }) {
         <text x={W - 14} y="20" textAnchor="end" fontSize="11" fill="var(--text-muted)">
           N ↑
         </text>
+
+        <g>
+          <circle
+            cx={px(CLINIC_LOCATION.lng)}
+            cy={py(CLINIC_LOCATION.lat)}
+            r="7"
+            fill="none"
+            stroke="var(--text)"
+            strokeWidth="2.5"
+          />
+          <text
+            x={px(CLINIC_LOCATION.lng)}
+            y={py(CLINIC_LOCATION.lat) - 13}
+            textAnchor="middle"
+            fontSize="11"
+            fontWeight="700"
+            fill="var(--text)"
+          >
+            Here
+          </text>
+        </g>
 
         {placed.map((facility) => {
           const x = px(facility.lng);
@@ -75,6 +105,17 @@ function SchematicMap({ facilities }: { facilities: Facility[] }) {
 export default function FacilityDirectory() {
   if (FACILITIES.length === 0) return null;
 
+  // Ordered by distance from this facility. That is a geographic fact, fixed
+  // and identical for every patient — it is not a judgement about which one
+  // suits them, and the caption says so.
+  const ordered = [...FACILITIES].sort((a, b) => {
+    const da = distanceFromClinic(a);
+    const db = distanceFromClinic(b);
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
+  });
+
   return (
     <div className="card">
       <p className="section-label">If you refer this patient onward</p>
@@ -82,11 +123,19 @@ export default function FacilityDirectory() {
       <SchematicMap facilities={FACILITIES} />
 
       <ul className="facility-list">
-        {FACILITIES.map((facility) => (
+        {ordered.map((facility) => {
+          const km = distanceFromClinic(facility);
+          return (
           <li key={facility.name}>
             <span className="facility-name">{facility.name}</span>
             <span className="facility-meta">
-              {facility.phone ? `${facility.area} · ${facility.phone}` : facility.area}
+              {[
+                facility.area,
+                km === null ? null : `${formatKm(km)} in a straight line`,
+                facility.phone,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
             <a
               className="facility-link no-print"
@@ -97,14 +146,15 @@ export default function FacilityDirectory() {
               Open in maps
             </a>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       <p className="meta" style={{ margin: 0 }}>
-        A fixed list provided by this facility. It is not a recommendation, it
-        is not ranked, and it does not reflect anything the patient told us.
-        Opening a map sends only the facility name — never anything about the
-        patient.
+        A fixed list provided by this facility, ordered by straight-line
+        distance from here — not by suitability, and not by anything the
+        patient told us. Straight-line distance is not travel time. Opening a
+        map sends only the facility name, never anything about the patient.
       </p>
     </div>
   );

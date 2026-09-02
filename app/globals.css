@@ -692,3 +692,141 @@ h2 {
   align-self: flex-start;
   margin-top: 2px;
 }
+
+/* --------------------------------------------------- printable document */
+/* A purpose-built document rather than the app page with print styles over
+   it. Hidden on screen; the only thing that renders when printing. */
+.printable {
+  display: none;
+}
+
+@media print {
+  .screen-only {
+    display: none !important;
+  }
+
+  .printable {
+    display: block;
+    color: #000;
+    font-size: 10.5pt;
+    line-height: 1.4;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+
+  .print-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #000;
+  }
+
+  .print-title {
+    margin: 0;
+    font-size: 15pt;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .print-sub {
+    margin: 3px 0 0;
+    font-size: 8.5pt;
+  }
+
+  .print-meta {
+    text-align: right;
+    font-size: 8.5pt;
+    white-space: nowrap;
+  }
+
+  .print-meta p {
+    margin: 0;
+  }
+
+  .print-section {
+    margin-bottom: 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-section h2 {
+    margin: 0 0 6px;
+    padding-bottom: 3px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #8a8a8a;
+  }
+
+  .print-row {
+    display: grid;
+    grid-template-columns: 44% 56%;
+    gap: 0 14px;
+    padding: 3px 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-term {
+    font-weight: 700;
+  }
+
+  .print-verbatim {
+    font-style: italic;
+  }
+
+  .print-raw {
+    white-space: pre-wrap;
+  }
+
+  .print-tag {
+    display: inline-block;
+    margin-right: 5px;
+    padding: 0 4px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: 0.06em;
+    border: 1px solid #000;
+  }
+
+  .print-note {
+    margin: 4px 0 0;
+    font-size: 8.5pt;
+  }
+
+  .print-chips {
+    margin: 0;
+    font-size: 9.5pt;
+  }
+
+  /* A printed document looks authoritative. This is the counterweight. */
+  .print-nodx {
+    margin: 16px 0 12px;
+    padding: 6px;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    border: 2px solid #000;
+    break-inside: avoid;
+  }
+
+  .print-footer {
+    margin: 0 0 6px;
+    padding-top: 8px;
+    font-size: 8.5pt;
+    border-top: 1px solid #8a8a8a;
+    break-inside: avoid;
+  }
+
+  .print-colophon {
+    margin: 0;
+    font-size: 7.5pt;
+  }
+}

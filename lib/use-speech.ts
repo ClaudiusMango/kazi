@@ -28,10 +28,17 @@ interface RecognitionLike {
   start(): void;
   stop(): void;
   abort(): void;
+  onstart: (() => void) | null;
   onresult: ((event: RecognitionEvent) => void) | null;
   onerror: ((event: RecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
 }
+
+/**
+ * Absolute ceiling on one recording. Nothing should be able to leave the
+ * microphone open indefinitely, whatever the browser does with stop().
+ */
+const MAX_RECORDING_MS = 30_000;
 
 type RecognitionCtor = new () => RecognitionLike;
 
@@ -54,6 +61,7 @@ function getCtor(): RecognitionCtor | null {
 
 function detach(instance: RecognitionLike | null) {
   if (!instance) return;
+  instance.onstart = null;
   instance.onresult = null;
   instance.onerror = null;
   instance.onend = null;
@@ -81,6 +89,12 @@ export function useSpeechInput(onTranscript: (text: string) => void): SpeechInpu
   const gotResult = useRef(false);
   const handler = useRef(onTranscript);
 
+  /** Whether the user currently wants to be recording. */
+  const wanted = useRef(false);
+  /** Whether the service has actually started. */
+  const running = useRef(false);
+  const maxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   handler.current = onTranscript;
 
   useEffect(() => {
@@ -91,6 +105,14 @@ export function useSpeechInput(onTranscript: (text: string) => void): SpeechInpu
   }, []);
 
   const stop = useCallback(() => {
+    wanted.current = false;
+    if (maxTimer.current) clearTimeout(maxTimer.current);
+
+    // A quick tap calls stop() before the speech service has finished
+    // starting, and browsers ignore that stop — leaving the microphone open
+    // with no way to close it. When that happens, onstart closes it instead.
+    if (!running.current) return;
+
     // stop() finalises and returns what was heard; abort() would discard it.
     recognition.current?.stop();
   }, []);
@@ -115,6 +137,8 @@ export function useSpeechInput(onTranscript: (text: string) => void): SpeechInpu
     setError(null);
     setInterim('');
     gotResult.current = false;
+    wanted.current = true;
+    running.current = false;
 
     const instance = new Ctor();
     instance.lang = LOCALES[localeIndex.current];
@@ -124,6 +148,20 @@ export function useSpeechInput(onTranscript: (text: string) => void): SpeechInpu
     instance.continuous = true;
     instance.interimResults = true;
     instance.maxAlternatives = 1;
+
+    instance.onstart = () => {
+      running.current = true;
+      // The user already let go before the service was ready.
+      if (!wanted.current) {
+        instance.stop();
+        return;
+      }
+      if (maxTimer.current) clearTimeout(maxTimer.current);
+      maxTimer.current = setTimeout(() => {
+        wanted.current = false;
+        instance.stop();
+      }, MAX_RECORDING_MS);
+    };
 
     instance.onresult = (event) => {
       let final = '';
@@ -157,6 +195,9 @@ export function useSpeechInput(onTranscript: (text: string) => void): SpeechInpu
     };
 
     instance.onend = () => {
+      running.current = false;
+      wanted.current = false;
+      if (maxTimer.current) clearTimeout(maxTimer.current);
       setListening(false);
       setInterim('');
       if (gotResult.current) return;
