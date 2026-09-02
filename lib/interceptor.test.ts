@@ -169,3 +169,47 @@ describe('emergency self-declarations', () => {
     expect(checkDangerSigns('im having a heart attack').triggered).toBe(true);
   });
 });
+
+describe('what the nurse gets', () => {
+  it('names a clinical grouping she can act on', () => {
+    const cases: Array<[string, string]> = [
+      ['im having a heart attack', 'Emergency stated by patient'],
+      ['my chest hurts', 'Cardiac / chest'],
+      ['short of breath', 'Breathing'],
+      ['I coughed up blood', 'Bleeding'],
+      ['numbness on one side', 'Neurological'],
+      ['I blacked out', 'Consciousness'],
+      ["my baby won't feed", 'Child'],
+      ['stiff neck and fever', 'Possible severe infection'],
+    ];
+    for (const [input, group] of cases) {
+      expect(checkDangerSigns(input).group, input).toBe(group);
+    }
+  });
+
+  it("carries the patient's own words so she can read them herself", () => {
+    const input = 'im having a heart attack';
+    expect(checkDangerSigns(input).source).toBe(input);
+  });
+
+  it('carries the triggering field when the flag came from the brief', () => {
+    const brief: NurseBrief = {
+      chief_complaint: [
+        { verbatim: 'my chest is squeezing me', standardised: null, confidence: 'sijui' },
+      ],
+      onset_duration: [],
+      context_exposures: [],
+      patient_concerns: [],
+      not_asked_about: [],
+    };
+    const result = checkBriefForDangerSigns(brief);
+    expect(result.group).toBe('Cardiac / chest');
+    expect(result.source).toBe('my chest is squeezing me');
+  });
+
+  it('reports nothing when nothing fired', () => {
+    const clean = checkDangerSigns('I have a headache');
+    expect(clean.group).toBeNull();
+    expect(clean.source).toBeNull();
+  });
+});

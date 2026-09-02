@@ -30,7 +30,11 @@ export type DangerCategory = 'red' | 'amber';
 export interface InterceptorResult {
   triggered: boolean;
   category: DangerCategory | null;
+  /** Clinical grouping, e.g. "Cardiac / chest". What the nurse acts on. */
+  group: string | null;
   matched_term: string | null;
+  /** The text that tripped the check, so the nurse can read it herself. */
+  source: string | null;
 }
 
 // Only the screens the app actually reaches. 'generating' is a state inside

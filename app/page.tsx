@@ -92,7 +92,7 @@ export default function Page() {
         );
 
       case 'red_alert':
-        return <RedAlert matchedTerm={danger?.matched_term ?? null} onRestart={restart} />;
+        return <RedAlert danger={danger} onRestart={restart} />;
 
       case 'amber_alert':
         return <AmberAlert onRestart={restart} />;

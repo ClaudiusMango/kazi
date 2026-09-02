@@ -912,3 +912,9 @@ h2 {
 .consent-points p:last-child {
   margin-bottom: 0;
 }
+
+.alert-quote {
+  font-size: 19px !important;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}

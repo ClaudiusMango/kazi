@@ -12,7 +12,9 @@ import type { DangerCategory, InterceptorResult, NurseBrief } from './types';
 const NO_MATCH: InterceptorResult = {
   triggered: false,
   category: null,
+  group: null,
   matched_term: null,
+  source: null,
 };
 
 /**
@@ -48,6 +50,7 @@ type Rule =
   | {
       kind: 'phrase';
       category: DangerCategory;
+      group: string;
       terms: string[];
       label?: string;
       suppress?: string[];
@@ -59,6 +62,7 @@ type Rule =
   | {
       kind: 'word';
       category: DangerCategory;
+      group: string;
       terms: string[];
       label?: string;
       suppress?: string[];
@@ -71,6 +75,7 @@ type Rule =
   | {
       kind: 'near';
       category: DangerCategory;
+      group: string;
       label: string;
       groups: string[][];
       window: number;
@@ -99,6 +104,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Emergency stated by patient',
     label: 'you told us this may be an emergency',
     terms: [
       'heart attack', 'cardiac arrest', 'having a stroke', 'im having a stroke',
@@ -114,6 +120,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Cardiac / chest',
     terms: [
       'chest pain', 'chest pains', 'crushing chest', 'tight chest',
       'chest tightness', 'tightness in my chest', 'pressure in my chest',
@@ -124,6 +131,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Cardiac / chest',
     label: 'chest pain or tightness',
     groups: [
       ['chest'],
@@ -137,6 +145,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Breathing',
     terms: [
       'cant breathe', 'cannot breathe', 'not breathing', 'stopped breathing',
       'shortness of breath', 'short of breath', 'out of breath',
@@ -148,11 +157,13 @@ const RULES: Rule[] = [
   {
     kind: 'word',
     category: 'red',
+    group: 'Breathing',
     terms: ['gasping', 'wheezing', 'breathless', 'suffocating'],
   },
   {
     kind: 'near',
     category: 'red',
+    group: 'Breathing',
     label: 'difficulty breathing',
     groups: [
       ['breath*'],
@@ -166,6 +177,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Neurological',
     terms: [
       'sudden weakness', 'face drooping', 'face is drooping', 'slurred speech',
       'slurring my words', 'cant speak properly', 'worst headache',
@@ -176,12 +188,14 @@ const RULES: Rule[] = [
   {
     kind: 'word',
     category: 'red',
+    group: 'Neurological',
     terms: ['paralysis', 'paralysed', 'paralyzed', 'stroke'],
     suppress: ['stroke of luck'],
   },
   {
     kind: 'near',
     category: 'red',
+    group: 'Neurological',
     label: 'numbness or weakness on one side',
     groups: [
       ['numb*', 'weak*', 'tingl*'],
@@ -192,6 +206,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Neurological',
     label: 'a sudden or severe headache',
     groups: [
       ['headache', 'head'],
@@ -204,6 +219,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Bleeding',
     terms: [
       'coughing blood', 'coughing up blood', 'cough up blood', 'coughed up blood',
       'vomiting blood', 'vomited blood', 'throwing up blood', 'threw up blood',
@@ -216,6 +232,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Bleeding',
     label: 'bleeding',
     groups: [
       ['blood', 'bleed*', 'bled'],
@@ -233,6 +250,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Consciousness',
     terms: [
       'passed out', 'blacked out', 'wont wake', 'wont wake up', 'not waking up',
       'cant wake him', 'cant wake her', 'cant wake them', 'not responding to me',
@@ -242,6 +260,7 @@ const RULES: Rule[] = [
   {
     kind: 'word',
     category: 'red',
+    group: 'Consciousness',
     terms: ['fainted', 'fainting', 'faint', 'unconscious', 'unresponsive', 'collapsed'],
   },
 
@@ -249,6 +268,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Pregnancy',
     terms: [
       'water broke', 'waters broke', 'baby not moving', 'baby stopped moving',
       'baby isnt moving', 'not felt the baby move',
@@ -257,6 +277,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Pregnancy',
     label: 'a danger sign during pregnancy',
     groups: [
       ['pregnant', 'pregnancy', 'expecting'],
@@ -270,6 +291,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Child',
     label: 'a child not feeding or waking',
     groups: [
       ['child', 'baby', 'infant', 'son', 'daughter', 'newborn', 'toddler'],
@@ -282,6 +304,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Child',
     label: 'a child who may be very unwell',
     groups: [
       ['child', 'baby', 'infant', 'son', 'daughter', 'newborn', 'toddler'],
@@ -292,11 +315,13 @@ const RULES: Rule[] = [
   {
     kind: 'word',
     category: 'red',
+    group: 'Child',
     terms: ['convulsions', 'convulsion', 'convulsing', 'seizure', 'seizures', 'fitting'],
   },
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Child',
     terms: ['having fits', 'had a fit', 'having a fit'],
   },
 
@@ -304,6 +329,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
+    group: 'Possible severe infection',
     label: 'a stiff neck with fever',
     groups: [
       ['stiff', 'stiffness'],
@@ -315,6 +341,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Possible severe infection',
     terms: ['non blanching rash', 'rash that doesnt fade', 'rash that does not fade'],
   },
 
@@ -322,6 +349,7 @@ const RULES: Rule[] = [
   {
     kind: 'word',
     category: 'red',
+    group: 'Injury',
     // Whole-token only: "burn" must not fire on "burning" or "heartburn".
     terms: ['accident', 'burn', 'burns', 'burnt', 'burned', 'scalded', 'fracture', 'fractured'],
     suppress: ['by accident', 'accidentally'],
@@ -329,6 +357,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'red',
+    group: 'Injury',
     terms: [
       'deep wound', 'broken bone', 'broken arm', 'broken leg', 'broke my arm',
       'broke my leg', 'head injury', 'hit my head', 'hit by a car',
@@ -342,6 +371,7 @@ const RULES: Rule[] = [
   {
     kind: 'phrase',
     category: 'amber',
+    group: 'Self-harm disclosure',
     terms: [
       'kill myself', 'killing myself', 'end my life', 'ending my life',
       'end it all', 'take my own life', 'want to die', 'wanna die',
@@ -354,11 +384,13 @@ const RULES: Rule[] = [
   {
     kind: 'word',
     category: 'amber',
+    group: 'Self-harm disclosure',
     terms: ['suicide', 'suicidal'],
   },
   {
     kind: 'near',
     category: 'amber',
+    group: 'Self-harm disclosure',
     label: 'intent + hurt myself',
     groups: [
       ['hurt*', 'harm*'],
@@ -369,6 +401,24 @@ const RULES: Rule[] = [
     window: 8,
   },
 ];
+
+/**
+ * Build a result carrying everything the nurse needs to act: the clinical
+ * grouping, the trigger, and the patient's own words that tripped it.
+ */
+function hit_(
+  rule: { category: DangerCategory; group: string },
+  term: string,
+  source: string
+): InterceptorResult {
+  return {
+    triggered: true,
+    category: rule.category,
+    group: rule.group,
+    matched_term: term,
+    source: source.trim(),
+  };
+}
 
 /**
  * Check a single piece of text. Red rules are evaluated before amber: an
@@ -386,15 +436,15 @@ export function checkDangerSigns(input: string): InterceptorResult {
     if (rule.kind === 'phrase') {
       const hit = rule.terms.find((t) => text.includes(t));
       if (hit) {
-        return { triggered: true, category: rule.category, matched_term: rule.label ?? hit };
+        return hit_(rule, rule.label ?? hit, input);
       }
     } else if (rule.kind === 'word') {
       const hit = rule.terms.find((t) => tokens.includes(t));
       if (hit) {
-        return { triggered: true, category: rule.category, matched_term: rule.label ?? hit };
+        return hit_(rule, rule.label ?? hit, input);
       }
     } else if (nearMatch(tokens, rule.groups, rule.window)) {
-      return { triggered: true, category: rule.category, matched_term: rule.label };
+      return hit_(rule, rule.label, input);
     }
   }
 
