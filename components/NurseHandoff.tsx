@@ -57,7 +57,23 @@ export default function NurseHandoff({
           No diagnosis was generated.
         </p>
 
-        <button className="btn" onClick={onDone} style={{ marginTop: 16 }}>
+        {/* Rendered by the browser's own print pipeline: the PDF is produced
+            on this device and never touches the server. It is also the one
+            artifact of a session that outlives it, which is why it is an
+            explicit action rather than something that happens automatically. */}
+        <button
+          className="btn btn-secondary no-print"
+          onClick={() => window.print()}
+          style={{ marginTop: 16 }}
+        >
+          Save as PDF
+        </button>
+
+        <button
+          className="btn no-print"
+          onClick={onDone}
+          style={{ marginTop: 10 }}
+        >
           Done — clear session
         </button>
       </div>

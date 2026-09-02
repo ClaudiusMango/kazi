@@ -541,3 +541,86 @@ h2 {
   max-width: var(--handoff-width);
   margin-inline: auto;
 }
+
+/* -------------------------------------------------------------------- print */
+/* "Save as PDF" is the browser's own print pipeline — the file is produced on
+   the device and never touches a server. Monochrome by choice: a clinic
+   printer should not spend colour on our accent, and a printed sheet reads as
+   a document rather than a screenshot. */
+@media print {
+  .no-print,
+  .overlay {
+    display: none !important;
+  }
+
+  @page {
+    margin: 16mm;
+  }
+
+  body {
+    background: #fff;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+
+  .handoff {
+    max-width: none;
+    margin: 0;
+    min-height: 0;
+    border: none;
+  }
+
+  .pad {
+    padding: 0;
+  }
+
+  .handoff-bar {
+    background: #fff;
+    color: #000;
+    padding: 0 0 8px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #000;
+  }
+
+  .handoff-bar .badge,
+  .badge {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+  }
+
+  .section-label {
+    color: #000;
+  }
+
+  .brief-item,
+  .footer-note,
+  .no-diagnosis {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .chip {
+    background: #fff;
+    border: 1px solid #666;
+  }
+
+  .flag {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+  }
+
+  .concern {
+    border-left: 3px solid #000;
+  }
+
+  /* A printed document looks authoritative. This is the counterweight, and on
+     paper it earns a box. */
+  .no-diagnosis {
+    color: #000;
+    border: 2px solid #000;
+    padding: 8px 12px;
+    text-align: center;
+  }
+}

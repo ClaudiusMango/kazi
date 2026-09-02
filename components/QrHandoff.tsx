@@ -31,7 +31,7 @@ export default function QrHandoff({ brief }: { brief: NurseBrief }) {
   }
 
   return (
-    <div className="card" style={{ textAlign: 'center' }}>
+    <div className="card no-print" style={{ textAlign: 'center' }}>
       <p className="section-label">Scan to open on the nurse’s device</p>
       <div style={{ background: '#fff', padding: 12, display: 'inline-block' }}>
         <QRCodeSVG value={url} size={240} level="L" />

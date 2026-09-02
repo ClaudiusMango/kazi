@@ -7,44 +7,56 @@ import type { NurseBrief } from '@/lib/types';
 
 // Nurse-side viewer. Pure decode-and-render: zero API calls, no server round
 // trip for the content. The brief arrives in the URL fragment, which the
-// browser never transmits.
+// browser never transmits — so this page's prerendered HTML cannot contain it,
+// by construction.
+
+type State =
+  | { kind: 'pending' }
+  | { kind: 'empty' }
+  | { kind: 'corrupt' }
+  | { kind: 'ready'; brief: NurseBrief; reduced: boolean };
 
 export default function NurseViewer() {
-  const [brief, setBrief] = useState<NurseBrief | null>(null);
-  const [reduced, setReduced] = useState(false);
-  const [failed, setFailed] = useState(false);
+  // 'pending' is also what someone sees if JavaScript never runs, so it must
+  // read as useful guidance rather than a spinner that hangs forever.
+  const [state, setState] = useState<State>({ kind: 'pending' });
 
   useEffect(() => {
-    const payload = window.location.hash.slice(1);
-    if (!payload) {
-      setFailed(true);
-      return;
+    // Every path below reaches a terminal state. Nothing can leave this on
+    // 'pending' once the effect has run.
+    try {
+      const payload = window.location.hash.replace(/^#/, '').trim();
+      if (!payload) {
+        setState({ kind: 'empty' });
+        return;
+      }
+      const decoded = decodeBrief(payload);
+      setState(
+        decoded
+          ? { kind: 'ready', brief: decoded.brief, reduced: decoded.reduced }
+          : { kind: 'corrupt' }
+      );
+    } catch {
+      setState({ kind: 'corrupt' });
     }
-    const decoded = decodeBrief(payload);
-    if (!decoded) {
-      setFailed(true);
-      return;
-    }
-    setBrief(decoded.brief);
-    setReduced(decoded.reduced);
   }, []);
 
-  if (failed) {
-    return (
-      <div className="shell pad">
-        <h1>Nothing to show</h1>
-        <p className="muted">
-          This page renders a brief from a scanned code. Scan the code on the
-          patient’s screen, or ask them to show you the summary directly.
-        </p>
-      </div>
-    );
-  }
+  if (state.kind !== 'ready') {
+    const message =
+      state.kind === 'corrupt'
+        ? 'That code could not be read. It may have been cut off while scanning. Ask the patient to show you the summary on their own screen.'
+        : 'Scan the code on the patient’s screen to open their summary here. If this message stays after scanning, ask the patient to show you their screen instead.';
 
-  if (!brief) {
     return (
-      <div className="shell pad">
-        <p className="muted">Decoding…</p>
+      <div className="handoff">
+        <div className="handoff-bar">
+          <span>KAZI INTAKE BRIEF</span>
+          <span className="badge">AI-assisted</span>
+        </div>
+        <div className="pad">
+          <h1>No summary loaded</h1>
+          <p className="muted">{message}</p>
+        </div>
       </div>
     );
   }
@@ -57,18 +69,26 @@ export default function NurseViewer() {
       </div>
 
       <div className="pad">
-        {reduced && (
+        {state.reduced && (
           <p className="meta" style={{ marginBottom: 16 }}>
             Standard terms only — this code was too large to carry the patient’s
             exact words. Ask them to show you their screen for the full brief.
           </p>
         )}
 
-        <BriefRenderer brief={brief} generatedAt="from scanned code" />
+        <BriefRenderer brief={state.brief} generatedAt="from scanned code" />
 
         <p className="no-diagnosis" style={{ marginTop: 24 }}>
           No diagnosis was generated.
         </p>
+
+        <button
+          className="btn btn-secondary no-print"
+          onClick={() => window.print()}
+          style={{ marginTop: 16 }}
+        >
+          Save as PDF
+        </button>
       </div>
     </div>
   );
