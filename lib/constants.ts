@@ -70,10 +70,8 @@ export const EMERGENCY_NUMBERS: { label: string; numbers: string[] } | null = {
  * and never sees it.
  */
 export const WHILE_YOU_WAIT: string[] = [
-  'Sit down and rest where you are. Do not walk far, and do not drive yourself anywhere.',
-  'Tell the person next to you what is happening, so someone knows.',
-  'Loosen anything tight around your neck or chest.',
-  'If you feel worse, call out for help straight away — do not wait quietly.',
+  'Sit down and rest. Do not drive yourself anywhere.',
+  'If you feel worse, call out for help.',
 ];
 
 // Failure copy lives with the notices in ChatInterface, not here: each one is

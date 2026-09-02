@@ -904,3 +904,11 @@ h2 {
   text-decoration: none;
   border-bottom: 2px solid currentColor;
 }
+
+.consent-points p {
+  margin: 0 0 14px;
+}
+
+.consent-points p:last-child {
+  margin-bottom: 0;
+}

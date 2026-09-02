@@ -26,14 +26,10 @@ export default function AmberAlert({ onRestart }: { onRestart: () => void }) {
           Please speak to the nurse at the desk now — someone is there for you.
         </p>
 
-        <section className="alert-panel">
-          <p className="alert-panel-label">Why the form stopped</p>
-          <p>
-            What you wrote is something a person should hear, not a form. We
-            have stopped the questions here so you can talk to someone instead.
-          </p>
-          <p>Nothing you typed was sent anywhere, and no summary was created.</p>
-        </section>
+        <p className="alert-small">
+          We stopped the questions here because this is something a person
+          should hear, not a form.
+        </p>
 
         {/* Rendered only once a current number has been verified. An
             out-of-date helpline number on this screen is the worst failure in

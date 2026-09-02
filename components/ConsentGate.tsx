@@ -3,6 +3,13 @@
 // The first screen. Nothing is reachable behind it. Consent is held in React
 // state only, so a reload returns here — which is the intended behaviour, not
 // a limitation.
+//
+// Every disclosure the compliance position depends on is still here — AI
+// involvement, what it does and does not do, that text goes to a model, that
+// no identifiers are collected or kept, and the one automated behaviour. They
+// are just no longer wrapped in four headed cards: a wall of text before the
+// first input is a consent gate people tap past without reading, which
+// defeats the point of having one.
 
 export default function ConsentGate({ onAccept }: { onAccept: () => void }) {
   return (
@@ -11,39 +18,25 @@ export default function ConsentGate({ onAccept }: { onAccept: () => void }) {
 
       <div className="disclosure">
         <strong>AI is involved in this conversation</strong>
-        Your words are sent to an AI model for processing. No human reads them
-        during the session.
+        Your words go to an AI model. No human reads them during the session.
       </div>
 
-      <div className="card">
-        <p className="section-label">What this tool does</p>
-        <p style={{ margin: 0 }}>
-          Translates what you describe into a structured summary the nurse can
-          read quickly. It organises your words — it does not interpret them.
+      <div className="card consent-points">
+        <p>
+          It organises your words into a summary for the nurse. It does not
+          interpret them.
         </p>
-      </div>
-
-      <div className="card">
-        <p className="section-label">What it does not do</p>
-        <p style={{ margin: 0 }}>
-          No diagnosis. No medical advice. No guessing what you might have. The
-          nurse makes all clinical decisions.
+        <p>
+          No diagnosis. No advice. No guessing. The nurse makes every clinical
+          decision.
         </p>
-      </div>
-
-      <div className="card">
-        <p className="section-label">Your information</p>
-        <p style={{ margin: 0 }}>
-          No name, ID, or phone number is collected. Nothing is saved after the
-          session ends.
+        <p>
+          No name, ID or phone number is collected. Nothing is saved after this
+          session.
         </p>
-      </div>
-
-      <div className="card">
-        <p className="section-label">Automated check</p>
-        <p style={{ margin: 0 }}>
-          A keyword detector checks for emergency danger signs. If triggered, it
-          will stop the conversation and direct you to the nurse immediately.
+        <p>
+          An automatic check watches for emergency danger signs. If it finds
+          one, it stops the conversation and sends you to the nurse.
         </p>
       </div>
 

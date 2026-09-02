@@ -7,11 +7,11 @@ import { EMERGENCY_NUMBERS, WHILE_YOU_WAIT } from '@/lib/constants';
 // No brief is generated and no further API call is made. The only exit is a
 // new session.
 //
-// The instruction comes first and largest, for the person who is frightened
-// and only reads the top of the screen. The explanation follows for the one
-// who wants to know what just happened — because a full-screen red STOP with
-// no reason given is its own kind of harm, and a patient who does not
-// understand why is more likely to dismiss it.
+// Written for someone frightened enough to read the top of the screen and
+// nothing else. The instruction is the whole message; everything below it
+// earns its place by being something the instruction cannot cover — why it
+// is not a diagnosis, what to show the nurse, and what to do if the desk is
+// empty. Anything longer than that is an essay nobody in an emergency reads.
 
 export default function RedAlert({
   matchedTerm,
@@ -25,52 +25,24 @@ export default function RedAlert({
       <div className="alert-inner">
         <header className="alert-head">
           <strong>Kazi intake</strong>
-          <span className="badge badge-inverse">Automatic safety check</span>
+          <span className="badge badge-inverse">Safety check</span>
         </header>
 
         <h1>STOP</h1>
 
         <p className="alert-lead">
-          Go to the nurse or the front desk now, and show them this screen.
+          Go to the nurse or the front desk now.
+          <br />
+          Show them this screen.
         </p>
 
         <section className="alert-panel">
-          <p className="alert-panel-label">Why this appeared</p>
+          <p className="alert-panel-label">Why</p>
           <p>
-            An automatic check reads what you type and looks for words that can
-            mean an emergency. It found one.
+            An automatic check found an emergency danger sign.{' '}
+            <strong>It is not a diagnosis.</strong>
           </p>
-          <p>
-            <strong>This is not a diagnosis.</strong> The check does not know
-            what is wrong with you. It only knows this should not wait in a
-            queue.
-          </p>
-        </section>
-
-        {matchedTerm && (
-          <section className="alert-panel">
-            <p className="alert-panel-label">What the check noticed</p>
-            <p className="alert-term">{matchedTerm}</p>
-            <p className="alert-small">Show this to the nurse — it tells her why.</p>
-          </section>
-        )}
-
-        <section className="alert-panel">
-          <p className="alert-panel-label">What to do now</p>
-          <ol className="alert-steps">
-            <li>Go to the nurse or the front desk.</li>
-            <li>Show them this screen.</li>
-            <li>If no one is there, tell any member of staff.</li>
-          </ol>
-        </section>
-
-        <section className="alert-panel">
-          <p className="alert-panel-label">While you wait</p>
-          <ul className="alert-steps">
-            {WHILE_YOU_WAIT.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+          {matchedTerm && <p className="alert-term">{matchedTerm}</p>}
         </section>
 
         {EMERGENCY_NUMBERS && (
@@ -87,8 +59,7 @@ export default function RedAlert({
         )}
 
         <p className="alert-small">
-          You have not done anything wrong. Nothing you typed was sent anywhere,
-          and no summary was created.
+          While you wait: {WHILE_YOU_WAIT.join(' ')}
         </p>
 
         <button className="btn btn-ghost" onClick={onRestart}>
