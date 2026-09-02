@@ -35,7 +35,8 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    const status = result.code === 'CONFIG' ? 500 : 502;
+    const status =
+      result.code === 'CONFIG' ? 500 : result.code === 'BUSY' ? 503 : 502;
     return json({ error: result.code }, status);
   }
 

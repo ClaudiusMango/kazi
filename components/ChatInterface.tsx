@@ -77,6 +77,16 @@ export default function ChatInterface({
   const rawPatientText = () =>
     patientMessages.map((m) => m.content).join('\n\n');
 
+  /** The proxy names the failure so the notice can be specific about it. */
+  async function errorCode(res: Response): Promise<string> {
+    try {
+      const data = await res.json();
+      return typeof data?.error === 'string' ? data.error : 'UPSTREAM';
+    } catch {
+      return 'UPSTREAM';
+    }
+  }
+
   /** Ask for the next question. Separated so a notice can retry it. */
   async function requestQuestion(history: ChatMessage[]) {
     setNotice(null);
@@ -100,7 +110,26 @@ export default function ChatInterface({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages: history }),
       });
-      if (!res.ok) throw new Error('chat failed');
+
+      if (!res.ok) {
+        const retry = { label: 'Try again', primary: true, run: () => void requestQuestion(history) };
+        setNotice(
+          (await errorCode(res)) === 'BUSY'
+            ? {
+                title: 'The assistant is busy right now',
+                body:
+                  'The service is overloaded — this is not about anything you typed, and nothing you have written has been lost. It usually clears within a few seconds.',
+                actions: [retry],
+              }
+            : {
+                title: 'I could not reach the assistant',
+                body:
+                  'Nothing you typed has been lost — it is all still on this screen. You can try again, or simply keep describing what you feel and prepare your summary when you are ready.',
+                actions: [retry],
+              }
+        );
+        return;
+      }
 
       const data = await res.json();
 
@@ -156,6 +185,25 @@ export default function ChatInterface({
     await requestQuestion(next);
   }
 
+  /**
+   * Degrade to unformatted, never to nothing — but let the patient choose when
+   * to do it, rather than ending their session on their behalf.
+   */
+  function briefFailure(busy: boolean): Notice {
+    return {
+      title: busy
+        ? 'The summary service is busy right now'
+        : 'I could not prepare your structured summary',
+      body: busy
+        ? 'The service is overloaded — nothing you typed has been lost. This usually clears within a few seconds. You can wait and try again, or take your own words to the nurse now.'
+        : 'The service did not respond. You can try again, or take your own words to the nurse now — she will still receive everything you typed, just without the standard terms beside it.',
+      actions: [
+        { label: 'Try again', primary: true, run: () => void generate() },
+        { label: 'Show my words to the nurse', run: () => onFallback(rawPatientText()) },
+      ],
+    };
+  }
+
   async function generate() {
     setNotice(null);
     setIsGenerating(true);
@@ -166,7 +214,11 @@ export default function ChatInterface({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages }),
       });
-      if (!res.ok) throw new Error('brief failed');
+
+      if (!res.ok) {
+        setNotice(briefFailure((await errorCode(res)) === 'BUSY'));
+        return;
+      }
 
       const data = await res.json();
       if (!isNurseBrief(data)) throw new Error('invalid brief');
@@ -181,17 +233,7 @@ export default function ChatInterface({
 
       onBrief(data);
     } catch {
-      // Degrade to unformatted, never to nothing — but let the patient choose
-      // when to do it, rather than ending their session on their behalf.
-      setNotice({
-        title: 'I could not prepare your structured summary',
-        body:
-          'The service did not respond. You can try again, or take your own words to the nurse now — she will still receive everything you typed, just without the standard terms beside it.',
-        actions: [
-          { label: 'Try again', primary: true, run: () => void generate() },
-          { label: 'Show my words to the nurse', run: () => onFallback(rawPatientText()) },
-        ],
-      });
+      setNotice(briefFailure(false));
     } finally {
       setIsGenerating(false);
     }

@@ -11,6 +11,20 @@ export const MODEL_PRIMARY = 'claude-haiku-4-5';
 export const MODEL_FALLBACK = 'claude-sonnet-5';
 
 /**
+ * `temperature` is rejected with a 400 on Claude 4.6 and later, Sonnet 5
+ * included — the sampling parameters were removed from that family. Haiku 4.5
+ * still accepts it, and temperature 0 matters for translation fidelity, so it
+ * is sent only where it is accepted rather than dropped everywhere.
+ *
+ * The fallback therefore runs at default sampling. Acceptable: it is a
+ * degraded path, and extraction correctness is held by the schema, not by
+ * temperature.
+ */
+export function acceptsTemperature(model: string): boolean {
+  return model.startsWith('claude-haiku-4-5');
+}
+
+/**
  * Fixed refusal for the sijui boundary. Rendered by the application, never
  * written by the model, so it cannot be softened, qualified, or continued.
  */
@@ -67,8 +81,10 @@ export const MAX_MESSAGES = 40;
  * on a cold connection can legitimately exceed 10s, and a slow brief beats a
  * spuriously failed one. The chat turn is short, so it keeps a tighter bound.
  */
-export const BRIEF_TIMEOUT_MS = 20_000;
-export const CHAT_TIMEOUT_MS = 12_000;
+// These are budgets for the whole retry sequence (primary twice, then the
+// fallback model), not for a single request.
+export const BRIEF_TIMEOUT_MS = 25_000;
+export const CHAT_TIMEOUT_MS = 15_000;
 
 export const COLORS = {
   accent: '#1d9e75',
