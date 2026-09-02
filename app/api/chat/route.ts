@@ -9,7 +9,11 @@
 import { callClaude, guardMessages, isSameOrigin, json } from '@/lib/claude-client';
 import { CHAT_TIMEOUT_MS, MODEL_PRIMARY } from '@/lib/constants';
 import { KAZI_CHAT_PROMPT } from '@/lib/system-prompt';
-import { ASK_NEXT_QUESTION_TOOL, FLAG_DIAGNOSTIC_REQUEST_TOOL } from '@/lib/tool-schema';
+import {
+  ASK_NEXT_QUESTION_TOOL,
+  CLOSE_INTAKE_TOOL,
+  FLAG_DIAGNOSTIC_REQUEST_TOOL,
+} from '@/lib/tool-schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +31,7 @@ export async function POST(req: Request) {
   const result = await callClaude({
     model: MODEL_PRIMARY,
     system: KAZI_CHAT_PROMPT,
-    tools: [ASK_NEXT_QUESTION_TOOL, FLAG_DIAGNOSTIC_REQUEST_TOOL],
+    tools: [ASK_NEXT_QUESTION_TOOL, CLOSE_INTAKE_TOOL, FLAG_DIAGNOSTIC_REQUEST_TOOL],
     toolChoice: { type: 'any' },
     messages: guard.messages,
     maxTokens: 300,
@@ -46,18 +50,18 @@ export async function POST(req: Request) {
     return json({ type: 'boundary' });
   }
 
-  const { question, enough_information } = result.input as {
-    question?: unknown;
-    enough_information?: unknown;
-  };
+  if (result.toolName === CLOSE_INTAKE_TOOL.name) {
+    const { closing_message } = result.input as { closing_message?: unknown };
+    if (typeof closing_message !== 'string' || closing_message.trim().length === 0) {
+      return json({ error: 'NO_QUESTION' }, 502);
+    }
+    return json({ type: 'closing', message: closing_message });
+  }
 
+  const { question } = result.input as { question?: unknown };
   if (typeof question !== 'string' || question.trim().length === 0) {
     return json({ error: 'NO_QUESTION' }, 502);
   }
 
-  return json({
-    type: 'question',
-    question,
-    enough_information: enough_information === true,
-  });
+  return json({ type: 'question', question });
 }

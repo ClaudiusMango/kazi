@@ -494,6 +494,11 @@ h2 {
   background: var(--surface);
   color: var(--text-secondary);
   cursor: pointer;
+  /* Hold-to-speak: suppress long-press selection and scroll-stealing. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .mic-live {
@@ -655,4 +660,35 @@ h2 {
 .facility-meta {
   font-size: 15px;
   color: var(--text-secondary);
+}
+
+.mic-hint {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.schematic {
+  margin: 0 0 16px;
+}
+
+.schematic svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.schematic figcaption {
+  margin-top: 6px;
+}
+
+.facility-link {
+  font-size: 15px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  align-self: flex-start;
+  margin-top: 2px;
 }

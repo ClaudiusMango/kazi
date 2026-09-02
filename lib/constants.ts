@@ -68,6 +68,18 @@ export const MIN_INTAKE_TURNS = 2;
 export const MIN_INTAKE_CHARS = 60;
 
 /**
+ * Hard ceiling on patient turns, enforced client-side and independent of the
+ * model. close_intake is the model's way out of the conversation; this is the
+ * one that does not depend on it behaving. Someone queuing to see a nurse
+ * should never be held in an interrogation by a loop we control.
+ */
+export const MAX_INTAKE_TURNS = 8;
+
+export const INTAKE_CAP_MESSAGE =
+  'Thank you — that is plenty for the nurse to work with. Tap “Generate my ' +
+  'summary” whenever you are ready.';
+
+/**
  * Origin the QR handoff link points at.
  *
  * Needed when the patient's device is on http://localhost — a QR encoding

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  INTAKE_CAP_MESSAGE,
+  MAX_INTAKE_TURNS,
   MIN_INTAKE_CHARS,
   MIN_INTAKE_TURNS,
   OPENING_MESSAGE,
@@ -167,10 +169,17 @@ export default function ChatInterface({
         setMessages([...history, { role: 'assistant', content: SIJUI_REFUSAL }]);
         return;
       }
-      if (typeof data.question !== 'string') throw new Error('malformed');
 
+      // The model has what it needs and is winding the conversation up rather
+      // than asking again.
+      if (data.type === 'closing' && typeof data.message === 'string') {
+        setMessages([...history, { role: 'assistant', content: data.message }]);
+        setReady(true);
+        return;
+      }
+
+      if (typeof data.question !== 'string') throw new Error('malformed');
       setMessages([...history, { role: 'assistant', content: data.question }]);
-      if (data.enough_information) setReady(true);
     } catch {
       setNotice({
         title: 'I could not reach the assistant',
@@ -212,6 +221,14 @@ export default function ChatInterface({
     }
 
     setMessages(next);
+
+    // Hard stop, independent of the model.
+    if (next.filter((m) => m.role === 'user').length >= MAX_INTAKE_TURNS) {
+      setMessages([...next, { role: 'assistant', content: INTAKE_CAP_MESSAGE }]);
+      setReady(true);
+      return;
+    }
+
     await requestQuestion(next);
   }
 
@@ -332,7 +349,9 @@ export default function ChatInterface({
 
         {speech.listening && (
           <p className="listening-hint">
-            Listening… your words appear below for you to check before sending.
+            {speech.interim
+              ? `“${speech.interim}”`
+              : 'Listening… your words appear below for you to check before sending.'}
           </p>
         )}
 
@@ -341,10 +360,33 @@ export default function ChatInterface({
             <button
               type="button"
               className={speech.listening ? 'mic mic-live' : 'mic'}
-              onClick={() => (speech.listening ? speech.stop() : speech.start())}
+              // Press and hold. Pointer capture means sliding a thumb off the
+              // button still ends the recording on release rather than
+              // leaving the microphone open.
+              onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                speech.start();
+              }}
+              onPointerUp={() => speech.stop()}
+              onPointerCancel={() => speech.stop()}
+              // Hold-to-speak is a pointer gesture, so give the keyboard the
+              // same thing rather than leaving it with no way in.
+              onKeyDown={(e) => {
+                if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+                  e.preventDefault();
+                  speech.start();
+                }
+              }}
+              onKeyUp={(e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault();
+                  speech.stop();
+                }
+              }}
+              onContextMenu={(e) => e.preventDefault()}
               disabled={busy}
-              aria-pressed={speech.listening}
-              aria-label={speech.listening ? 'Stop recording' : 'Speak instead of typing'}
+              aria-label="Hold to speak"
+              title="Hold to speak"
             >
               <MicIcon live={speech.listening} />
             </button>
@@ -368,6 +410,9 @@ export default function ChatInterface({
           </button>
         </div>
 
+        {speech.supported && !speech.listening && !speech.error && (
+          <p className="mic-hint">Hold the microphone to speak</p>
+        )}
         {inputError && <p className="inline-error">{inputError}</p>}
         {speech.error && <p className="inline-error">{speech.error}</p>}
       </div>

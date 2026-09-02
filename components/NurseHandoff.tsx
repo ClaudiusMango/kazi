@@ -1,6 +1,7 @@
 'use client';
 
 import BriefRenderer from './BriefRenderer';
+import FacilityDirectory from './FacilityDirectory';
 import QrHandoff from './QrHandoff';
 import type { NurseBrief } from '@/lib/types';
 
@@ -56,6 +57,12 @@ export default function NurseHandoff({
         <p className="no-diagnosis" style={{ marginTop: 24 }}>
           No diagnosis was generated.
         </p>
+
+        {/* Referral is the nurse's decision, so the directory sits with her
+            rather than being offered to the patient as a suggestion. */}
+        <div style={{ marginTop: 24 }}>
+          <FacilityDirectory />
+        </div>
 
         {/* Rendered by the browser's own print pipeline: the PDF is produced
             on this device and never touches the server. It is also the one

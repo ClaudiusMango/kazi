@@ -89,14 +89,38 @@ export const ASK_NEXT_QUESTION_TOOL = {
           'One short, warm question about what the patient feels, when it ' +
           'started, or what worries them. Never about what it might mean.',
       },
-      enough_information: {
-        type: 'boolean' as const,
+    },
+    required: ['question'],
+    additionalProperties: false,
+  },
+};
+
+/**
+ * The way out of the conversation.
+ *
+ * Without this the model has no move except to ask another question, because
+ * every turn forces a tool call. A boolean "that was enough" flag on
+ * ask_next_question did not solve it: the model still had to supply a
+ * question, so the interrogation continued regardless of the flag.
+ */
+export const CLOSE_INTAKE_TOOL = {
+  name: 'close_intake',
+  description:
+    'Call this once enough has been gathered. It tells the patient you have ' +
+    'what the nurse needs and invites anything they still want to add. Never ' +
+    'ask a further probing question after calling it.',
+  strict: true,
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      closing_message: {
+        type: 'string' as const,
         description:
-          'True once chief complaint, onset or duration, and some description ' +
-          'of character or severity have been gathered in the patient’s own words.',
+          'One or two warm sentences: you have enough for the nurse, and is ' +
+          'there anything else they want her to know.',
       },
     },
-    required: ['question', 'enough_information'],
+    required: ['closing_message'],
     additionalProperties: false,
   },
 };
