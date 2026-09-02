@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import {
   INTAKE_CAP_MESSAGE,
   MAX_INTAKE_TURNS,
-  MIN_INTAKE_CHARS,
-  MIN_INTAKE_TURNS,
   OPENING_MESSAGE,
   SIJUI_REFUSAL,
+  canOfferSummary,
 } from '@/lib/constants';
 import { checkBriefForDangerSigns, checkDangerSigns } from '@/lib/interceptor';
 import { isDiagnosticRequest } from '@/lib/sijui-filter';
@@ -124,17 +123,18 @@ export default function ChatInterface({
 
   const busy = isLoading || isGenerating;
 
-  // Gate on substance, not on turn count. `ready` (the model's
-  // enough_information flag) promotes the button rather than unlocking it, so
-  // a patient who has finished talking is never trapped in the conversation.
   const patientMessages = messages.filter((m) => m.role === 'user');
   const patientChars = patientMessages.reduce(
     (total, m) => total + m.content.trim().length,
     0
   );
-  const hasMinimum =
-    patientMessages.length >= MIN_INTAKE_TURNS && patientChars >= MIN_INTAKE_CHARS;
-  const canGenerate = !busy && hasMinimum;
+  const canGenerate =
+    !busy &&
+    canOfferSummary({
+      turns: patientMessages.length,
+      chars: patientChars,
+      ready,
+    });
 
   const rawPatientText = () =>
     patientMessages.map((m) => m.content).join('\n\n');

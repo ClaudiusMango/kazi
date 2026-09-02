@@ -94,7 +94,30 @@ export const OPENING_MESSAGE =
  * button's prominence rather than its existence.
  */
 export const MIN_INTAKE_TURNS = 2;
-export const MIN_INTAKE_CHARS = 60;
+export const MIN_INTAKE_CHARS = 40;
+
+/**
+ * Whether "Generate my summary" is offered at all.
+ *
+ * There must ALWAYS be a way forward. A patient who has finished talking
+ * cannot be held in the conversation because a character threshold was not
+ * met — that is a dead end with no exit, and it is exactly what happened when
+ * the model closed the intake after two short answers.
+ *
+ * Three independent routes, any one of which is enough:
+ *   1. the model called close_intake, which is it saying it has what it needs
+ *   2. the patient has given a substantial amount in their own words
+ *   3. enough turns have passed regardless of how briefly they answered
+ */
+export function canOfferSummary(opts: {
+  turns: number;
+  chars: number;
+  ready: boolean;
+}): boolean {
+  if (opts.ready) return true;
+  if (opts.turns >= MIN_INTAKE_TURNS && opts.chars >= MIN_INTAKE_CHARS) return true;
+  return opts.turns >= MIN_INTAKE_TURNS + 1;
+}
 
 /**
  * Hard ceiling on patient turns, enforced client-side and independent of the
