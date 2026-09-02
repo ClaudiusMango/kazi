@@ -40,13 +40,29 @@ function tokenMatches(token: string, pattern: string): boolean {
 }
 
 type Rule =
-  /** Multi-word phrases, matched as substrings of the normalised text. */
-  | { kind: 'phrase'; category: DangerCategory; terms: string[]; suppress?: string[] }
+  /**
+   * Multi-word phrases, matched as substrings of the normalised text.
+   * `label` overrides what the patient is shown, for triggers that should not
+   * be quoted back at them.
+   */
+  | {
+      kind: 'phrase';
+      category: DangerCategory;
+      terms: string[];
+      label?: string;
+      suppress?: string[];
+    }
   /**
    * Single words matched as whole tokens only. This is what keeps "burn" from
    * firing on "burning when I pass urine" or on "heartburn".
    */
-  | { kind: 'word'; category: DangerCategory; terms: string[]; suppress?: string[] }
+  | {
+      kind: 'word';
+      category: DangerCategory;
+      terms: string[];
+      label?: string;
+      suppress?: string[];
+    }
   /**
    * Every group must appear inside a window of N consecutive tokens. This is
    * what catches "my chest hurts" and "pain in my chest", which no fixed
@@ -74,6 +90,26 @@ function nearMatch(tokens: string[], groups: string[][], window: number): boolea
 }
 
 const RULES: Rule[] = [
+  // ------------------------------------------- EMERGENCY SELF-DECLARATION
+  // Someone saying "I'm having a heart attack" is not asking a question, they
+  // are raising an alarm. This must never reach the model to be answered — it
+  // is checked first, and the label deliberately does not repeat the condition
+  // back at them, because "what the check noticed: heart attack" would read as
+  // the system agreeing with a diagnosis it is in no position to make.
+  {
+    kind: 'phrase',
+    category: 'red',
+    label: 'you told us this may be an emergency',
+    terms: [
+      'heart attack', 'cardiac arrest', 'having a stroke', 'im having a stroke',
+      'i am dying', 'im dying', 'think im dying', 'think i am dying',
+      'call an ambulance', 'need an ambulance', 'get an ambulance',
+      'this is an emergency', 'its an emergency', 'it is an emergency',
+      'is an emergency', 'i need help now', 'i need help right now',
+      'something is very wrong', 'i might die', 'i could die',
+    ],
+  },
+
   // ------------------------------------------------------------------ CARDIAC
   {
     kind: 'phrase',
@@ -349,10 +385,14 @@ export function checkDangerSigns(input: string): InterceptorResult {
 
     if (rule.kind === 'phrase') {
       const hit = rule.terms.find((t) => text.includes(t));
-      if (hit) return { triggered: true, category: rule.category, matched_term: hit };
+      if (hit) {
+        return { triggered: true, category: rule.category, matched_term: rule.label ?? hit };
+      }
     } else if (rule.kind === 'word') {
       const hit = rule.terms.find((t) => tokens.includes(t));
-      if (hit) return { triggered: true, category: rule.category, matched_term: hit };
+      if (hit) {
+        return { triggered: true, category: rule.category, matched_term: rule.label ?? hit };
+      }
     } else if (nearMatch(tokens, rule.groups, rule.window)) {
       return { triggered: true, category: rule.category, matched_term: rule.label };
     }

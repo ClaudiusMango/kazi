@@ -45,6 +45,37 @@ export const SIJUI_REFUSAL =
  */
 export const CRISIS_HELPLINE: { label: string; number: string } | null = null;
 
+/**
+ * National emergency numbers, shown on the RED screen for the case the screen
+ * cannot solve on its own: nobody at the desk.
+ *
+ * These are stable national numbers rather than a charity line, which is why
+ * they ship enabled where the crisis helpline does not — but verify them on
+ * the day like everything else, and replace with whatever the facility uses.
+ */
+export const EMERGENCY_NUMBERS: { label: string; numbers: string[] } | null = {
+  label: 'If there is no one at the desk',
+  numbers: ['999', '112'],
+};
+
+/**
+ * Static safety guidance for the RED screen.
+ *
+ * NOT first aid and not treatment. Every line is non-conditional — safe
+ * whatever is actually wrong — because the system does not know the condition
+ * and must not act as though it does. Deliberately excluded: aspirin or any
+ * medication, positioning advice ("lie down" harms someone in respiratory
+ * distress), and "do not eat or drink" (which harms a diabetic hypo). This is
+ * human-authored screen text, identical every time. The model never writes it
+ * and never sees it.
+ */
+export const WHILE_YOU_WAIT: string[] = [
+  'Sit down and rest where you are. Do not walk far, and do not drive yourself anywhere.',
+  'Tell the person next to you what is happening, so someone knows.',
+  'Loosen anything tight around your neck or chest.',
+  'If you feel worse, call out for help straight away — do not wait quietly.',
+];
+
 // Failure copy lives with the notices in ChatInterface, not here: each one is
 // paired with the actions that remedy it, and a message without an action is
 // the dead end this replaced. The patient still never sees a technical detail.

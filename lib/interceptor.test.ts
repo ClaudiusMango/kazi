@@ -144,3 +144,28 @@ describe('purity', () => {
     expect(a).toEqual(b);
   });
 });
+
+describe('emergency self-declarations', () => {
+  it('treats an explicit emergency claim as red, not as a diagnostic request', () => {
+    red('im having a heart attack');
+    red('I think I am having a heart attack');
+    red('I think I am dying');
+    red('please call an ambulance');
+    red('this is an emergency');
+    red('I need help now');
+  });
+
+  it('does not quote the claimed condition back at the patient', () => {
+    // "What the check noticed: heart attack" would read as the system
+    // agreeing with a diagnosis it is in no position to make.
+    const result = checkDangerSigns('im having a heart attack');
+    expect(result.matched_term).toBe('you told us this may be an emergency');
+    expect(result.matched_term).not.toMatch(/heart attack/i);
+  });
+
+  it('still reaches the interceptor before any network call could happen', () => {
+    // checkDangerSigns is pure and synchronous; this is the property the
+    // "nothing you typed was sent anywhere" claim rests on.
+    expect(checkDangerSigns('im having a heart attack').triggered).toBe(true);
+  });
+});

@@ -1,5 +1,7 @@
 'use client';
 
+import { EMERGENCY_NUMBERS, WHILE_YOU_WAIT } from '@/lib/constants';
+
 // Interceptor returned category 'red'.
 //
 // No brief is generated and no further API call is made. The only exit is a
@@ -56,11 +58,33 @@ export default function RedAlert({
         <section className="alert-panel">
           <p className="alert-panel-label">What to do now</p>
           <ol className="alert-steps">
-            <li>Stand up and go to the nurse or the front desk.</li>
+            <li>Go to the nurse or the front desk.</li>
             <li>Show them this screen.</li>
             <li>If no one is there, tell any member of staff.</li>
           </ol>
         </section>
+
+        <section className="alert-panel">
+          <p className="alert-panel-label">While you wait</p>
+          <ul className="alert-steps">
+            {WHILE_YOU_WAIT.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
+
+        {EMERGENCY_NUMBERS && (
+          <section className="alert-panel">
+            <p className="alert-panel-label">{EMERGENCY_NUMBERS.label}</p>
+            <p className="alert-numbers">
+              {EMERGENCY_NUMBERS.numbers.map((number) => (
+                <a key={number} href={`tel:${number}`}>
+                  {number}
+                </a>
+              ))}
+            </p>
+          </section>
+        )}
 
         <p className="alert-small">
           You have not done anything wrong. Nothing you typed was sent anywhere,
