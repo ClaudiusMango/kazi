@@ -11,7 +11,7 @@ import {
 } from '@/lib/constants';
 import { checkBriefForDangerSigns, checkDangerSigns } from '@/lib/interceptor';
 import { isDiagnosticRequest } from '@/lib/sijui-filter';
-import type { ChatMessage, DangerCategory, NurseBrief } from '@/lib/types';
+import type { ChatMessage, InterceptorResult, NurseBrief } from '@/lib/types';
 import { useSpeechInput } from '@/lib/use-speech';
 import { isNurseBrief } from '@/lib/validate-brief';
 import MessageBubble from './ui/MessageBubble';
@@ -40,7 +40,7 @@ function MicIcon({ live }: { live: boolean }) {
 interface Props {
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
-  onDanger: (category: DangerCategory) => void;
+  onDanger: (result: InterceptorResult) => void;
   onBrief: (brief: NurseBrief) => void;
   onFallback: (rawText: string) => void;
 }
@@ -233,8 +233,8 @@ export default function ChatInterface({
 
     // Checkpoint 1: before anything leaves the device.
     const danger = checkDangerSigns(trimmed);
-    if (danger.triggered && danger.category) {
-      onDanger(danger.category);
+    if (danger.triggered) {
+      onDanger(danger);
       return;
     }
 
@@ -303,8 +303,8 @@ export default function ChatInterface({
       // Checkpoint 3: danger signs that only surfaced once the model had
       // translated the patient's words into intake terms.
       const danger = checkBriefForDangerSigns(data);
-      if (danger.triggered && danger.category) {
-        onDanger(danger.category);
+      if (danger.triggered) {
+        onDanger(danger);
         return;
       }
 

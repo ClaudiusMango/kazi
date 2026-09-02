@@ -314,13 +314,89 @@ h2 {
 }
 
 /* ------------------------------------------------------------ alert screens */
+/* Full-bleed background for impact; content laid out like every other page so
+   the alert reads as part of the same application rather than a rupture. */
 .alert {
   min-height: 100vh;
+}
+
+.alert-inner {
+  max-width: var(--shell-width);
+  margin: 0 auto;
+  padding: 20px 20px 40px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 32px 24px;
-  gap: 20px;
+  gap: 18px;
+}
+
+.alert-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  font-weight: 700;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.85;
+}
+
+.badge-inverse {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--red-bg);
+}
+
+.alert-lead {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.alert-panel {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.alert-panel p {
+  margin: 0 0 10px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.alert-panel p:last-child {
+  margin-bottom: 0;
+}
+
+.alert-panel-label {
+  font-size: 13px !important;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.alert-term {
+  font-size: 22px !important;
+  font-weight: 700;
+}
+
+.alert-steps {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.alert-steps li {
+  margin-bottom: 6px;
+}
+
+.alert-small {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 0.85;
 }
 
 .alert-red {
@@ -328,20 +404,15 @@ h2 {
   color: #fff;
 }
 
-.alert-red .alert-secondary {
-  color: var(--red-text);
-}
-
 .alert-red h1 {
-  font-size: 56px;
+  margin: 4px 0 0;
+  font-size: 52px;
   letter-spacing: 0.06em;
-  margin: 0 0 8px;
 }
 
-.alert-red p {
-  font-size: 24px;
-  line-height: 1.4;
-  margin: 0;
+.alert-red .alert-small {
+  color: var(--red-text);
+  opacity: 1;
 }
 
 .alert-amber {
@@ -350,29 +421,20 @@ h2 {
 }
 
 .alert-amber h1 {
+  margin: 4px 0 0;
   font-size: 28px;
   font-weight: 600;
-  margin: 0;
+  line-height: 1.3;
 }
 
-.alert-amber p {
-  font-size: 20px;
-  line-height: 1.5;
-  margin: 0;
+.alert-amber .alert-lead {
+  font-weight: 500;
 }
 
 .helpline {
   color: var(--amber-accent);
-  font-size: 22px;
+  font-size: 26px !important;
   font-weight: 700;
-}
-
-.rule {
-  border: none;
-  border-top: 1px solid currentColor;
-  opacity: 0.35;
-  width: 100%;
-  margin: 4px 0;
 }
 
 /* ------------------------------------------------------------ nurse handoff */
@@ -541,11 +603,7 @@ h2 {
 /* The alert screens keep their full-bleed background — that is the point of
    them — but their content is constrained like every other screen, so the copy
    does not stretch across a laptop display. */
-.alert > * {
-  width: 100%;
-  max-width: var(--handoff-width);
-  margin-inline: auto;
-}
+
 
 /* -------------------------------------------------------------------- print */
 /* "Save as PDF" is the browser's own print pipeline — the file is produced on

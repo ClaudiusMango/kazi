@@ -12,7 +12,7 @@ import SessionComplete from '@/components/SessionComplete';
 import { useInactivityPurge } from '@/lib/use-inactivity';
 import type {
   ChatMessage,
-  DangerCategory,
+  InterceptorResult,
   NurseBrief,
   ScreenState,
 } from '@/lib/types';
@@ -30,6 +30,7 @@ export default function Page() {
   const [brief, setBrief] = useState<NurseBrief | null>(null);
   const [fallbackText, setFallbackText] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState('');
+  const [danger, setDanger] = useState<InterceptorResult | null>(null);
 
   /** Drop everything held in memory. */
   const clearState = useCallback(() => {
@@ -37,6 +38,7 @@ export default function Page() {
     setBrief(null);
     setFallbackText(null);
     setGeneratedAt('');
+    setDanger(null);
   }, []);
 
   /**
@@ -54,8 +56,9 @@ export default function Page() {
   const guarded = screen === 'chat' || screen === 'brief' || screen === 'handoff';
   const { warning, reset } = useInactivityPurge(guarded, restart);
 
-  const handleDanger = useCallback((category: DangerCategory) => {
-    setScreen(category === 'red' ? 'red_alert' : 'amber_alert');
+  const handleDanger = useCallback((result: InterceptorResult) => {
+    setDanger(result);
+    setScreen(result.category === 'amber' ? 'amber_alert' : 'red_alert');
   }, []);
 
   const handleBrief = useCallback((next: NurseBrief) => {
@@ -89,7 +92,7 @@ export default function Page() {
         );
 
       case 'red_alert':
-        return <RedAlert onRestart={restart} />;
+        return <RedAlert matchedTerm={danger?.matched_term ?? null} onRestart={restart} />;
 
       case 'amber_alert':
         return <AmberAlert onRestart={restart} />;

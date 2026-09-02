@@ -88,7 +88,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'chest + pain/tightness',
+    label: 'chest pain or tightness',
     groups: [
       ['chest'],
       ['pain*', 'hurt*', 'ach*', 'tight*', 'crush*', 'pressure', 'heavy', 'heaviness', 'squeez*'],
@@ -117,7 +117,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'breathing + difficulty',
+    label: 'difficulty breathing',
     groups: [
       ['breath*'],
       ['cant', 'cannot', 'hard', 'difficult*', 'struggl*', 'short', 'trouble',
@@ -146,7 +146,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'numbness/weakness + one side',
+    label: 'numbness or weakness on one side',
     groups: [
       ['numb*', 'weak*', 'tingl*'],
       ['one', 'side', 'left', 'right', 'arm', 'leg', 'face', 'hand'],
@@ -156,7 +156,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'sudden/worst headache',
+    label: 'a sudden or severe headache',
     groups: [
       ['headache', 'head'],
       ['worst', 'sudden', 'suddenly', 'thunderclap', 'explod*'],
@@ -180,7 +180,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'blood + route',
+    label: 'bleeding',
     groups: [
       ['blood', 'bleed*', 'bled'],
       ['cough*', 'vomit*', 'threw', 'throw*', 'stool*', 'urine', 'pee*',
@@ -221,7 +221,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'pregnancy + danger sign',
+    label: 'a danger sign during pregnancy',
     groups: [
       ['pregnant', 'pregnancy', 'expecting'],
       ['bleed*', 'blood', 'fit', 'fits', 'seizure*', 'convuls*', 'severe',
@@ -234,7 +234,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'child not feeding/waking',
+    label: 'a child not feeding or waking',
     groups: [
       ['child', 'baby', 'infant', 'son', 'daughter', 'newborn', 'toddler'],
       ['not', 'wont', 'cant', 'cannot', 'isnt', 'hasnt', 'refus*', 'stopped',
@@ -246,7 +246,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'child + collapse sign',
+    label: 'a child who may be very unwell',
     groups: [
       ['child', 'baby', 'infant', 'son', 'daughter', 'newborn', 'toddler'],
       ['convuls*', 'seizure*', 'fitting', 'floppy', 'limp', 'unresponsive', 'blue'],
@@ -268,7 +268,7 @@ const RULES: Rule[] = [
   {
     kind: 'near',
     category: 'red',
-    label: 'stiff neck + fever',
+    label: 'a stiff neck with fever',
     groups: [
       ['stiff', 'stiffness'],
       ['neck'],
